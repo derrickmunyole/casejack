@@ -1,26 +1,35 @@
 package com.example.casemanagementplatform.cases;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 
 @Entity
 @Table(name="cases")
+@Getter
+@NoArgsConstructor
 public class Case {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @Column(nullable = false)
     private String subject;
 
+    @Setter
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Setter
     @Enumerated(EnumType.STRING)
     private CasePriority priority;
 
+    @Setter
     @Enumerated(EnumType.STRING)
     private CaseStatus status;
 
@@ -42,9 +51,6 @@ public class Case {
         CLOSED
     }
 
-    public Case() {
-    }
-
     public Case(String subject, String description, CasePriority priority, CaseStatus status) {
         this.subject = subject;
         this.description = description;
@@ -63,45 +69,4 @@ public class Case {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public CasePriority getPriority() {
-        return priority;
-    }
-
-    public void setPriority(CasePriority priority) {
-        this.priority = priority;
-    }
-
-    public CaseStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(CaseStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
 }

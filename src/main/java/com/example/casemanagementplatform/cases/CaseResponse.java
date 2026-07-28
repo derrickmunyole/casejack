@@ -1,7 +1,12 @@
 package com.example.casemanagementplatform.cases;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@AllArgsConstructor
 public class CaseResponse {
     private Long id;
     private String subject;
@@ -10,44 +15,6 @@ public class CaseResponse {
     private Case.CasePriority priority;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public CaseResponse(Long id, String subject, String description, Case.CaseStatus status, Case.CasePriority priority, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.subject = subject;
-        this.description = description;
-        this.status = status;
-        this.priority = priority;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Case.CaseStatus getStatus() {
-        return status;
-    }
-
-    public Case.CasePriority getPriority() {
-        return priority;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
 
     public static CaseResponse fromEntity(Case c) {
         return new CaseResponse(
