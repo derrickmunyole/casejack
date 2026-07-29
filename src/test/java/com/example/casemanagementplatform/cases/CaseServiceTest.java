@@ -123,8 +123,17 @@ public class CaseServiceTest {
 
     @Test
     void deleteCaseById_deletesCase() {
+        when(caseRepository.existsById(1L)).thenReturn(true);
         caseService.deleteCase(1L);
 
         verify(caseRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void deleteCaseById_throwsWhenNotFound() {
+        when(caseRepository.existsById(99L)).thenThrow(new CaseNotFoundException("Case with id 99 not found"));
+        assertThrows(CaseNotFoundException.class, () -> caseService.deleteCase(99L));
+
+        verify(caseRepository, never()).deleteById(any());
     }
 }

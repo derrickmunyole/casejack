@@ -46,6 +46,9 @@ public class CaseService {
     }
 
     public void deleteCase(Long id){
+        if(!caseRepository.existsById(id)){
+            throw new CaseNotFoundException("Case with id %d not found".formatted(id));
+        }
         caseRepository.deleteById(id);
     }
 
