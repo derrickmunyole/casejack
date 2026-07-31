@@ -1,8 +1,12 @@
 package com.example.casemanagementplatform.cases;
 
 import com.example.casemanagementplatform.common.exceptions.CaseNotFoundException;
+import com.example.casemanagementplatform.common.tenant.TenantContext;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +27,16 @@ public class CaseServiceTest {
     @InjectMocks
     private CaseService caseService;
 
+    @BeforeEach
+    public void setup(){
+        TenantContext.setTenantId("x-tenant-a");
+    }
+
+    @AfterEach
+    public void teardown(){
+        TenantContext.clear();
+    }
+
     @Test
     void createCase_SavesAndReturnsCase(){
         CaseRequest caseRequest = new CaseRequest();
@@ -31,6 +45,7 @@ public class CaseServiceTest {
         caseRequest.setPriority(Case.CasePriority.HIGH);
         caseRequest.setStatus(Case.CaseStatus.OPEN);
 
+
         Case savedCase = new Case(
                 "Test subject",
                 "Test Description",
@@ -38,6 +53,7 @@ public class CaseServiceTest {
                 Case.CaseStatus.OPEN,
                 "x-tenant-a"
         );
+
 
         ReflectionTestUtils.setField(savedCase, "id", 1L);
         ReflectionTestUtils.setField(savedCase, "createdAt", LocalDateTime.now());
@@ -53,7 +69,10 @@ public class CaseServiceTest {
         assertThat(savedCaseResponse.getPriority()).isEqualTo(Case.CasePriority.HIGH);
         assertThat(savedCaseResponse.getStatus()).isEqualTo(Case.CaseStatus.OPEN);
 
-        verify(caseRepository, times(1)).save(any(Case.class));
+        ArgumentCaptor<Case> argumentCaptor = ArgumentCaptor.forClass(Case.class);
+        verify(caseRepository, times(1)).save(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue().getTenantId()).isEqualTo("x-tenant-a");
+
     }
 
     @Test
