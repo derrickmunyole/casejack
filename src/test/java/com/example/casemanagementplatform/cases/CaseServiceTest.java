@@ -35,7 +35,8 @@ public class CaseServiceTest {
                 "Test subject",
                 "Test Description",
                 Case.CasePriority.HIGH,
-                Case.CaseStatus.OPEN
+                Case.CaseStatus.OPEN,
+                "x-tenant-a"
         );
 
         ReflectionTestUtils.setField(savedCase, "id", 1L);
@@ -61,7 +62,8 @@ public class CaseServiceTest {
                 "Test subject",
                 "Test description",
                 Case.CasePriority.HIGH,
-                Case.CaseStatus.OPEN
+                Case.CaseStatus.OPEN,
+                "x-tenant-a"
         );
 
         ReflectionTestUtils.setField(existingCase, "id", 1L);
@@ -91,7 +93,8 @@ public class CaseServiceTest {
                 "Test subject",
                 "Test description",
                 Case.CasePriority.HIGH,
-                Case.CaseStatus.OPEN
+                Case.CaseStatus.OPEN,
+                "x-tenant-a"
         );
 
         ReflectionTestUtils.setField(existingCase, "id", 1L);

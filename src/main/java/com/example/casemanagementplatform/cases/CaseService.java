@@ -1,6 +1,7 @@
 package com.example.casemanagementplatform.cases;
 
 import com.example.casemanagementplatform.common.exceptions.CaseNotFoundException;
+import com.example.casemanagementplatform.common.tenant.TenantContext;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,12 +15,20 @@ public class CaseService {
         this.caseRepository = caseRepository;
     }
 
+    /**
+     * Creates a new Case. Accepts a tenant id parameter to create a
+     * case, allowing to filter cases based on the tenant id
+     *
+     * @param request
+     * @return the created case, including generated id, timestamps, and tenant id
+     */
     public CaseResponse createCase(CaseRequest request){
         Case newCase = new Case(
                 request.getSubject(),
                 request.getDescription(),
                 request.getPriority(),
-                request.getStatus()
+                request.getStatus(),
+                TenantContext.getTenantId()
         );
 
         Case savedCase = caseRepository.save(newCase);
