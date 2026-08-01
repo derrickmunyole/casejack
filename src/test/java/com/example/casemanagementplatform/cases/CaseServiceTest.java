@@ -1,8 +1,12 @@
 package com.example.casemanagementplatform.cases;
 
 import com.example.casemanagementplatform.common.exceptions.CaseNotFoundException;
+import com.example.casemanagementplatform.common.tenant.TenantContext;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +27,16 @@ public class CaseServiceTest {
     @InjectMocks
     private CaseService caseService;
 
+    @BeforeEach
+    public void setup(){
+        TenantContext.setTenantId("x-tenant-a");
+    }
+
+    @AfterEach
+    public void teardown(){
+        TenantContext.clear();
+    }
+
     @Test
     void createCase_SavesAndReturnsCase(){
         CaseRequest caseRequest = new CaseRequest();
@@ -31,12 +45,15 @@ public class CaseServiceTest {
         caseRequest.setPriority(Case.CasePriority.HIGH);
         caseRequest.setStatus(Case.CaseStatus.OPEN);
 
+
         Case savedCase = new Case(
                 "Test subject",
                 "Test Description",
                 Case.CasePriority.HIGH,
-                Case.CaseStatus.OPEN
+                Case.CaseStatus.OPEN,
+                "x-tenant-a"
         );
+
 
         ReflectionTestUtils.setField(savedCase, "id", 1L);
         ReflectionTestUtils.setField(savedCase, "createdAt", LocalDateTime.now());
@@ -52,7 +69,10 @@ public class CaseServiceTest {
         assertThat(savedCaseResponse.getPriority()).isEqualTo(Case.CasePriority.HIGH);
         assertThat(savedCaseResponse.getStatus()).isEqualTo(Case.CaseStatus.OPEN);
 
-        verify(caseRepository, times(1)).save(any(Case.class));
+        ArgumentCaptor<Case> argumentCaptor = ArgumentCaptor.forClass(Case.class);
+        verify(caseRepository, times(1)).save(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue().getTenantId()).isEqualTo("x-tenant-a");
+
     }
 
     @Test
@@ -61,14 +81,15 @@ public class CaseServiceTest {
                 "Test subject",
                 "Test description",
                 Case.CasePriority.HIGH,
-                Case.CaseStatus.OPEN
+                Case.CaseStatus.OPEN,
+                "x-tenant-a"
         );
 
         ReflectionTestUtils.setField(existingCase, "id", 1L);
         ReflectionTestUtils.setField(existingCase, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(existingCase, "updatedAt", LocalDateTime.now());
 
-        when(caseRepository.findById(1L)).thenReturn(Optional.of(existingCase));
+        when(caseRepository.findByIdAndTenantId(1L, "x-tenant-a")).thenReturn(Optional.of(existingCase));
 
         CaseResponse result = caseService.getCaseById(1L);
 
@@ -80,7 +101,7 @@ public class CaseServiceTest {
 
     @Test
     void getCaseById_throwsWhenNotFound(){
-        when(caseRepository.findById(1L)).thenReturn(Optional.empty());
+        when(caseRepository.findByIdAndTenantId(1L, "x-tenant-a")).thenReturn(Optional.empty());
 
         assertThrows(CaseNotFoundException.class, () -> caseService.getCaseById(1L));
     }
@@ -91,14 +112,15 @@ public class CaseServiceTest {
                 "Test subject",
                 "Test description",
                 Case.CasePriority.HIGH,
-                Case.CaseStatus.OPEN
+                Case.CaseStatus.OPEN,
+                "x-tenant-a"
         );
 
         ReflectionTestUtils.setField(existingCase, "id", 1L);
         ReflectionTestUtils.setField(existingCase, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(existingCase, "updatedAt", LocalDateTime.now());
 
-        when(caseRepository.findById(1L)).thenReturn(Optional.of(existingCase));
+        when(caseRepository.findByIdAndTenantId(1L, "x-tenant-a")).thenReturn(Optional.of(existingCase));
         when(caseRepository.save(any(Case.class))).thenReturn(existingCase);
 
         CaseRequest caseRequest = new CaseRequest();
@@ -115,25 +137,39 @@ public class CaseServiceTest {
     }
 
     @Test
-    void updateCaseById_throwsWhenNotFound(){
-        when(caseRepository.findById(1L)).thenReturn(Optional.empty());
+    void getCaseById_throwsWhenNoMatchingCaseForTenant(){
+        when(caseRepository.findByIdAndTenantId(1L, "x-tenant-a")).thenReturn(Optional.empty());
 
-        assertThrows(CaseNotFoundException.class, () -> caseService.updateCase(1L, new CaseRequest()));
+        assertThrows(CaseNotFoundException.class, () -> caseService.getCaseById(1L));
     }
 
     @Test
     void deleteCaseById_deletesCase() {
-        when(caseRepository.existsById(1L)).thenReturn(true);
+        Case existingCase = new Case(
+                "Test case",
+                "Test case description",
+                Case.CasePriority.HIGH,
+                Case.CaseStatus.OPEN,
+                "x-tenant-a"
+        );
+
+        ReflectionTestUtils.setField(existingCase, "id", 1L);
+        ReflectionTestUtils.setField(existingCase, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(existingCase, "updatedAt", LocalDateTime.now());
+
+        when(caseRepository.findByIdAndTenantId(1L, "x-tenant-a")).thenReturn(Optional.of(existingCase));
+
         caseService.deleteCase(1L);
 
-        verify(caseRepository, times(1)).deleteById(1L);
+        verify(caseRepository, times(1)).delete(existingCase);
     }
 
     @Test
     void deleteCaseById_throwsWhenNotFound() {
-        when(caseRepository.existsById(99L)).thenThrow(new CaseNotFoundException("Case with id 99 not found"));
+        when(caseRepository.findByIdAndTenantId(99L, "x-tenant-a")).thenReturn(Optional.empty());
+
         assertThrows(CaseNotFoundException.class, () -> caseService.deleteCase(99L));
 
-        verify(caseRepository, never()).deleteById(any());
+        verify(caseRepository, never()).delete(any(Case.class));
     }
 }

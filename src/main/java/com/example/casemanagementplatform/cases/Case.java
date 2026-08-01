@@ -33,6 +33,8 @@ public class Case {
     @Enumerated(EnumType.STRING)
     private CaseStatus status;
 
+    private String tenantId;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
@@ -51,11 +53,12 @@ public class Case {
         CLOSED
     }
 
-    public Case(String subject, String description, CasePriority priority, CaseStatus status) {
+    public Case(String subject, String description, CasePriority priority, CaseStatus status, String tenantId) {
         this.subject = subject;
         this.description = description;
         this.priority = priority;
         this.status = status;
+        this.tenantId = tenantId;
     }
 
     @PrePersist

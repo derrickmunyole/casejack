@@ -54,6 +54,7 @@ public class CaseControllerTest {
         when(caseService.createCase(any(CaseRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/cases")
+                        .header("X-Tenant-ID", "x-tenant-a")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(caseRequest)))
                 .andExpect(status().isCreated())
@@ -86,7 +87,8 @@ public class CaseControllerTest {
 
         when(caseService.getAllCases()).thenReturn(List.of(caseResponse, caseResponse2));
 
-        mockMvc.perform(get("/api/cases"))
+        mockMvc.perform(get("/api/cases")
+                        .header("X-Tenant-ID", "x-tenant-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].subject").value("Test subject"))
@@ -107,7 +109,8 @@ public class CaseControllerTest {
 
         when(caseService.getCaseById(1L)).thenReturn(caseResponse);
 
-        mockMvc.perform(get("/api/cases/1"))
+        mockMvc.perform(get("/api/cases/1")
+                        .header("X-Tenant-ID", "x-tenant-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.subject").value("Test subject"));
@@ -119,7 +122,8 @@ public class CaseControllerTest {
                 "Case with id 25 not found"
         ));
 
-        mockMvc.perform(get("/api/cases/25"))
+        mockMvc.perform(get("/api/cases/25")
+                        .header("X-Tenant-ID", "x-tenant-a"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
                 .andExpect(jsonPath("$.message").value("Case with id 25 not found"))
@@ -148,6 +152,7 @@ public class CaseControllerTest {
         when(caseService.updateCase(eq(1L), any(CaseRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/cases/1")
+                        .header("X-Tenant-ID", "x-tenant-a")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(caseRequest)))
                 .andExpect(status().isOk())
@@ -167,6 +172,7 @@ public class CaseControllerTest {
         ));
 
         mockMvc.perform(put("/api/cases/63")
+                        .header("X-Tenant-ID", "x-tenant-a")
                         .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(caseRequest)))
                 .andExpect(status().isNotFound())
@@ -177,7 +183,9 @@ public class CaseControllerTest {
 
     @Test
     void deleteCase_returns204WhenDeleted() throws Exception {
-        mockMvc.perform(delete("/api/cases/1")).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/cases/1")
+                .header("X-Tenant-ID", "x-tenant-a"))
+                .andExpect(status().isNoContent());
 
         verify(caseService, times(1)).deleteCase(eq(1L));
     }
@@ -187,10 +195,18 @@ public class CaseControllerTest {
         doThrow(new CaseNotFoundException("Case with id 1 not found"))
                 .when(caseService).deleteCase(eq(1L));
 
-        mockMvc.perform(delete("/api/cases/1"))
+        mockMvc.perform(delete("/api/cases/1")
+                        .header("X-Tenant-ID", "x-tenant-a"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Case with id 1 not found"));
 
 
+    }
+
+    @Test
+    void request_returns400WhenTenantHeaderMissing() throws Exception {
+        mockMvc.perform(get("/api/cases"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Missing required header 'x-tenant-id'"));
     }
 }
