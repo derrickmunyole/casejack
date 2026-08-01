@@ -1,3 +1,4 @@
+
 package com.example.casemanagementplatform.cases;
 
 import com.example.casemanagementplatform.common.exceptions.CaseNotFoundException;
@@ -19,7 +20,7 @@ public class CaseService {
      * Creates a new Case. Accepts a tenant id parameter to create a
      * case, allowing to filter cases based on the tenant id
      *
-     * @param request
+     * @param request a CaseRequest object
      * @return the created case, including generated id, timestamps, and tenant id
      */
     public CaseResponse createCase(CaseRequest request){
@@ -36,16 +37,21 @@ public class CaseService {
     }
 
     public CaseResponse getCaseById(Long id) {
-        Case resultCase = caseRepository.findById(id).orElseThrow(()-> new CaseNotFoundException("Case with id %d not found".formatted(id)));
+        Case resultCase = caseRepository.findByIdAndTenantId(id, TenantContext.getTenantId())
+                .orElseThrow(()-> new CaseNotFoundException("Case with id %d not found".formatted(id)));
         return CaseResponse.fromEntity(resultCase);
     }
 
     public List<CaseResponse> getAllCases(){
-        return caseRepository.findAll().stream().map(CaseResponse::fromEntity).toList();
+        return caseRepository.findAllByTenantId(TenantContext.getTenantId())
+                .stream()
+                .map(CaseResponse::fromEntity)
+                .toList();
     }
 
     public CaseResponse updateCase(Long id, CaseRequest request){
-        Case existingCase = caseRepository.findById(id).orElseThrow(()-> new CaseNotFoundException("Case with id %d not found".formatted(id)));
+        Case existingCase = caseRepository.findByIdAndTenantId(id, TenantContext.getTenantId())
+                .orElseThrow(()-> new CaseNotFoundException("Case with id %d not found".formatted(id)));
         existingCase.setSubject(request.getSubject());
         existingCase.setDescription(request.getDescription());
         existingCase.setPriority(request.getPriority());
@@ -55,10 +61,9 @@ public class CaseService {
     }
 
     public void deleteCase(Long id){
-        if(!caseRepository.existsById(id)){
-            throw new CaseNotFoundException("Case with id %d not found".formatted(id));
-        }
-        caseRepository.deleteById(id);
+        Case existingCase = caseRepository.findByIdAndTenantId(id, TenantContext.getTenantId())
+                .orElseThrow(()-> new CaseNotFoundException("Case with id %d not found".formatted(id)));
+        caseRepository.delete(existingCase);
     }
 
 
