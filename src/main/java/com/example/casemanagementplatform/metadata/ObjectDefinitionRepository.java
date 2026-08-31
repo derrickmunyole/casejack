@@ -10,5 +10,7 @@ public interface ObjectDefinitionRepository extends JpaRepository<ObjectDefiniti
 
     List<ObjectDefinition> findByTenantId(String tenantId);
 
+    Optional<ObjectDefinition> findByIdAndTenantId(Long id, String tenantId);
+
     boolean existsByTenantIdAndName(String tenantId, String name);
 }
